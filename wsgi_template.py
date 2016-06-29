@@ -12,15 +12,14 @@ from flask import Flask
 wsgi = Flask(__name__)
 wsgi.secret_key = ""
 
-
-#wsgi.wsgi_app = SessionMiddleware(wsgi.wsgi_app, session_opts)
-
+# wsgi.wsgi_app = SessionMiddleware(wsgi.wsgi_app, session_opts)
 
 config = configparser.ConfigParser()
 config.read('config/settings.ini')
 settings = config['SETTINGS']
 
 # Welcome Mat
+
 
 @wsgi.route('/')
 def index():
@@ -30,7 +29,6 @@ def index():
 
 
 # Configure Favicon
-
 
 if __name__ == '__main__':
     print(' * Application Configuration Successful')
