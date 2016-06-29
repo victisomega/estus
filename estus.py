@@ -31,7 +31,7 @@ args = parser.parse_args()
 
 # Building Logging System
 
-log_location = '/var/log/estus/' if args.log == '' or args.log is None  else args.log
+log_location = '/var/log/estus/' if args.log == '' or args.log is None else args.log
 
 logger = logging.getLogger(__name__)
 try:
@@ -40,6 +40,8 @@ try:
 except FileNotFoundError:
     try:
         os.makedirs(log_location)
+        fhandler = logging.FileHandler(log_location + 'estus.log')
+        fhandler.setLevel(logging.DEBUG)
     except PermissionError:
         cont = input('Root Permissions Needed, Allow? (y/n)')
         if cont == 'y' or cont == 'Y' or cont == 'yes' or cont == 'Yes':
@@ -55,8 +57,6 @@ except FileNotFoundError:
             sys.exit()
 
 
-
-
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fhandler.setFormatter(formatter)
 
@@ -66,16 +66,19 @@ logger.addHandler(fhandler)
 
 # Define init Function
 
+
 def init():
     pass
+
 
 def install(package):
     try:
         pip.main(['install', package])
         return True
-    except:
+    except SyntaxError:
         msg = 'Installation of %s using pip Failed... Exiting' % package
         logger.critical(msg)
+
 
 def check_for_pkg(package):
     found = importlib.util.find_spec(package)
@@ -96,6 +99,7 @@ def check_for_pkg(package):
             return False
     else:
         return True
+
 
 def build_app_by_design(design):
     msg = 'Attempting to Build Directory Structure based on Selected Design'
@@ -134,18 +138,19 @@ def build_app_by_design(design):
     f.close()
     return True
 
+
 def create_path(p_path):
     msg = 'Attempting to Create Basic Directory structure'
     logger.info(msg)
 
     try:
         os.makedirs(p_path, exist_ok=True)
-    except OSError as ose:
+    except OSError:
         if not os.path.isdir(p_path):
             raise
         msg = 'Invalid Directory, please specified a Valid Directory'
-        cont = input(msg)
-        create_path(cont)
+        cont1 = input(msg)
+        create_path(cont1)
 
 
 # Defining main Function
@@ -171,33 +176,30 @@ def main():
                 if not success:
                     sys.exit()
                 else:
-                    msg = 'Skipping Install of SQLAlchemy, Application WILL NOT function properly, continue Build? (y/n)'
+                    msg = 'Skipping Install of SQLAlchemy, Application WILL NOT function properly, continue? (y/n)'
                     logger.warn(msg)
-                    cont = input(msg)
-                    if cont == 'y' or cont == 'yes':
+                    cont1 = input(msg)
+                    if cont1 == 'y' or cont1 == 'yes':
                         logger.warn('Continuing Broken Build!')
                     else:
-                        msg = 'Stopping Build, Please see Logs for more information'
                         logger.warn('Stopping Build, Exiting')
                         sys.exit()
 
             msg = 'ORM Install Check Complete!'
             logger.info(msg)
 
-
             if p_name == '' or p_name is None:
                 p_name = 'estus_testapp'
             msg = 'Project Name set as %s' % p_name
             logger.info(msg)
 
-            p = None
             if p_path == '' or p_path is None:
                 msg = 'Path to Project not specified. Specify Path (Default: %s)' % str(os.getcwd() + '/' + p_name)
-                cont = input(msg)
-                if cont == '' or cont == None:
+                cont1 = input(msg)
+                if cont1 == '' or cont1 is None:
                     p = str(os.getcwd() + '/' + p_name)
                 else:
-                    p = cont + p_name
+                    p = cont1 + p_name
             else:
                 p = p_path + p_name
 
@@ -207,16 +209,15 @@ def main():
             msg = 'Path Setup Complete! Using Directory %s' % p
             logger.info(msg)
 
-            des = None
-            if p_design == '' or p_design == None:
+            if p_design == '' or p_design is None:
                 msg = 'Application Design type not specified, specify now? (Default: monolithic)'
-                cont = input(msg)
-                if cont != 'monolithic' and cont != 'modular':
+                cont1 = input(msg)
+                if cont1 != 'monolithic' and cont1 != 'modular':
                     msg = 'Invalid Design type specified, Exiting.'
                     logger.critical(msg)
                     sys.exit()
                 else:
-                    des = cont
+                    des = cont1
             else:
                 des = p_design
             success = build_app_by_design(des)
@@ -225,7 +226,6 @@ def main():
                 logger.critical(msg)
                 sys.exit()
 
-            f = open(str(p + 'wsgi.py'), 'w')
             with open(os.path.join(sys.path[0], 'wsgi_template.py')) as of:
                 lines = of.readlines()
                 with open(str(p + "/wsgi.py"), "w") as f1:
